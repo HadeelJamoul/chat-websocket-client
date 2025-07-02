@@ -1,11 +1,11 @@
 import 'dart:convert';
 
+import 'package:chat_websocket_client/core/url.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:image_picker/image_picker.dart';
 
 class CloudinaryService {
-  static const String cloudName = 'dxndy21lx';
   static const String uploadPreset = 'chat-unsigned';
 
   static Future<String?> uploadImage() async {
@@ -13,9 +13,7 @@ class CloudinaryService {
     final pickedImage = await picker.pickImage(source: ImageSource.gallery);
     if (pickedImage == null) return null;
 
-    final uri = Uri.parse(
-      'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
-    );
+    final uri = Uri.parse(Url.CLOUDINARY);
 
     //* we attached two things to the request
     final request =
