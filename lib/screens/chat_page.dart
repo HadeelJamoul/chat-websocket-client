@@ -4,6 +4,7 @@ import 'package:chat_websocket_client/model/chat_message_model.dart';
 import 'package:chat_websocket_client/request/chat_messsage_request.dart';
 import 'package:chat_websocket_client/response/chat_message_response.dart';
 import 'package:chat_websocket_client/services/cloudinary_service.dart';
+import 'package:chat_websocket_client/utils/app_enums.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/web.dart';
 import 'package:uuid/uuid.dart';
@@ -38,7 +39,7 @@ class _ChatPageState extends State<ChatPage> {
           ChatMessageModel(
             content: response.content,
             isMe: isMe,
-            type: response.type,
+            type: MessageType.fromString(response.type),
           ),
         );
       });
@@ -49,7 +50,7 @@ class _ChatPageState extends State<ChatPage> {
     if (_controller.text.isNotEmpty) {
       final request = ChatMessageRequest(
         sender: userId,
-        type: 'text',
+        type: MessageType.getString(MessageType.TEXT),
         content: _controller.text,
       );
 
@@ -64,7 +65,7 @@ class _ChatPageState extends State<ChatPage> {
   void _sendImage(String imageUrl) {
     final request = ChatMessageRequest(
       sender: userId,
-      type: 'image',
+      type: MessageType.getString(MessageType.IMAGE),
       content: imageUrl,
     );
 
@@ -106,7 +107,7 @@ class _ChatPageState extends State<ChatPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child:
-                        msg.type == 'image'
+                        msg.type == MessageType.IMAGE
                             ? Image.network(msg.content, width: 200)
                             : Text(msg.content),
                   ),

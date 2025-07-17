@@ -1,8 +1,10 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:chat_websocket_client/utils/app_enums.dart';
+
 class ChatMessageModel {
   final String content;
   final bool isMe;
-  final String type;
+  final MessageType type;
 
   ChatMessageModel({
     required this.content,
