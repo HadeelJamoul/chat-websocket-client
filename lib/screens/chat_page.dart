@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:chat_websocket_client/model/chat_message_model.dart';
+import 'package:chat_websocket_client/request/chat_messsage_request.dart';
 import 'package:chat_websocket_client/response/chat_message_response.dart';
 import 'package:chat_websocket_client/services/cloudinary_service.dart';
 import 'package:flutter/material.dart';
+import 'package:logger/web.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -19,13 +21,13 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   final _controller = TextEditingController();
   final List<ChatMessageModel> _messages = [];
-  final String userId = const Uuid().v4(); // generate a unique id per session
+  final String userId = const Uuid().v4();
+  final Logger logger = Logger();
 
   @override
   void initState() {
     super.initState();
 
-    //* Listen to incoming WebSocket messages
     widget.channel.stream.listen((message) {
       final decoded = jsonDecode(message);
       final response = ChatMessageResponse.fromJson(decoded);
@@ -45,25 +47,30 @@ class _ChatPageState extends State<ChatPage> {
 
   void _sendMessage() {
     if (_controller.text.isNotEmpty) {
-      final message = {
-        'sender': userId,
-        'type': 'text',
-        'content': _controller.text,
-      };
+      final request = ChatMessageRequest(
+        sender: userId,
+        type: 'text',
+        content: _controller.text,
+      );
 
-      widget.channel.sink.add(jsonEncode(message));
+      final String encoded = jsonEncode(request.toJson());
+      logger.i('Sending text message: $encoded');
+      widget.channel.sink.add(encoded);
+
       _controller.clear();
     }
   }
 
   void _sendImage(String imageUrl) {
-    final message = {
-      'sender': userId,
-      'type': 'image',
-      'content': imageUrl,
-    };
+    final request = ChatMessageRequest(
+      sender: userId,
+      type: 'image',
+      content: imageUrl,
+    );
 
-    widget.channel.sink.add(jsonEncode(message));
+    final String encoded = jsonEncode(request.toJson());
+    logger.i('Sending image message: $encoded');
+    widget.channel.sink.add(encoded);
   }
 
   @override
@@ -89,22 +96,24 @@ class _ChatPageState extends State<ChatPage> {
                   alignment:
                       msg.isMe ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
-                    margin:
-                        const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                    margin: const EdgeInsets.symmetric(
+                      vertical: 4,
+                      horizontal: 8,
+                    ),
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: msg.isMe ? Colors.blue[100] : Colors.grey[300],
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: msg.type == 'image'
-                        ? Image.network(msg.content, width: 200)
-                        : Text(msg.content),
+                    child:
+                        msg.type == 'image'
+                            ? Image.network(msg.content, width: 200)
+                            : Text(msg.content),
                   ),
                 );
               },
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: Row(
@@ -125,7 +134,6 @@ class _ChatPageState extends State<ChatPage> {
               ],
             ),
           ),
-
           TextButton(
             onPressed: () async {
               final url = await CloudinaryService.uploadImage();
